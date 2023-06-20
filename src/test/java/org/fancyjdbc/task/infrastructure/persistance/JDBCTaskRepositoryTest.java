@@ -1,6 +1,5 @@
 package org.fancyjdbc.task.infrastructure.persistance;
 
-import org.fancyjdbc.project.infrastructure.persistance.JDBCProjectRepository;
 import org.fancyjdbc.task.domain.Task;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,7 +13,6 @@ import java.sql.Statement;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -59,7 +57,7 @@ class JDBCTaskRepositoryTest {
 
         // assert
         verify(statement).executeQuery(query);
-        List<Task> expectedTaskList = List.of(new Task("task1-id", "task1"), new Task ("task2-id", "task2"));
+        List<Task> expectedTaskList = List.of(new Task("task1-id", "task1", projectId), new Task ("task2-id", "task2", projectId));
         assertThat(actualTaskList).isEqualTo(expectedTaskList);
     }
 }

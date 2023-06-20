@@ -2,6 +2,7 @@ package org.fancyjdbc.project.infrastructure.persistance;
 
 import org.fancyjdbc.project.domain.Project;
 import org.fancyjdbc.project.domain.ProjectRepository;
+import org.hibernate.SessionFactory;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -11,8 +12,8 @@ import java.sql.Statement;
 public class JDBCProjectRepository implements ProjectRepository {
     private final Connection connection;
 
-    public JDBCProjectRepository(Connection connection) {
-        this.connection = connection;
+    public JDBCProjectRepository(SessionFactory sessionFactory) {
+        this.connection = sessionFactory;
     }
 
     @Override

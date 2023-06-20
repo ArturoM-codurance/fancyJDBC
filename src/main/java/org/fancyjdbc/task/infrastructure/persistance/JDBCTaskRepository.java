@@ -2,42 +2,37 @@ package org.fancyjdbc.task.infrastructure.persistance;
 
 import org.fancyjdbc.task.domain.Task;
 import org.fancyjdbc.task.domain.TaskRepository;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
 
 public class JDBCTaskRepository implements TaskRepository {
-    private final Connection connection;
+    private final SessionFactory sessionFactory;
 
-    public JDBCTaskRepository(Connection connection) {
-        this.connection = connection;
+    public JDBCTaskRepository(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
     @Override
-    public void addTask(String taskId, String projectId) throws SQLException {
-        Statement statement = connection.createStatement();
-        String defaultName = "Initial task";
-        int defaultComplexity = 1;
-        int defaultCost = 0;
-        String defaultTaxCountry = "spain";
-        String insertProjectQuery = String.format("INSERT INTO task (id, project_id, name, complexity_id, cost, tax_id) VALUES ('%s', '%s', '%s', %d, %d, '%s')", taskId, projectId, defaultName, defaultComplexity, defaultCost, defaultTaxCountry);
-        statement.execute(insertProjectQuery);
+    public void addTask(String taskId, String projectId) {
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+
+        session.persist(new Task(taskId, projectId, projectId));
+
+        session.getTransaction().commit();
     }
 
     @Override
-    public List<Task> getByProjectId(String projectId) throws SQLException {
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(String.format("SELECT * FROM task WHERE project_id = '%s'", projectId));
-        List<Task> tasks = new ArrayList<>();
-        while (resultSet.next()){
-            String id = resultSet.getString("id");
-            String name = resultSet.getString("name");
-            tasks.add(new Task(id, name));
-        }
-        return tasks;
+    public List<Task> getByProjectId(String projectId){
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+
+        List<Task> list = session.createQuery("select t from Task t where t.projectId = '%s'".formatted(projectId), Task.class).list();
+
+        session.getTransaction().commit();
+
+        return list;
     }
 }

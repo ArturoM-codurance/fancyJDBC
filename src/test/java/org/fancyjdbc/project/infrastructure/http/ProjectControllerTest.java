@@ -111,7 +111,7 @@ class ProjectControllerTest {
         when(request.params("projectId")).thenReturn(projectId);
         Project project = new Project(projectId, projectName);
         when(projectService.getProject(projectId)).thenReturn(project);
-        List<Task> tasks = List.of(new Task(taskId, taskName));
+        List<Task> tasks = List.of(new Task(taskId, taskName, projectId));
         when(taskService.getTasksFromProject(projectId)).thenReturn(tasks);
 
         // act
