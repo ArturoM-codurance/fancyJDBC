@@ -46,7 +46,7 @@ class JDBCProjectRepositoryTest {
         String projectName = "projectName";
         Project expectedProject = new Project(projectId, projectName);
         when(connection.createStatement()).thenReturn(statement);
-        when(statement.executeQuery("SELECT * FROM task WHERE project_id = 'projectId'")).thenReturn(resultSet);
+        when(statement.executeQuery("SELECT * FROM project WHERE id = 'projectId'")).thenReturn(resultSet);
         when(resultSet.getString("id")).thenReturn(projectId);
         when(resultSet.getString("name")).thenReturn(projectName);
         // act

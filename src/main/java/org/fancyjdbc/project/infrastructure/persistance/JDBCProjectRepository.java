@@ -25,7 +25,7 @@ public class JDBCProjectRepository implements ProjectRepository {
     @Override
     public Project getProject(String projectId) throws SQLException {
         Statement statement = connection.createStatement();
-        String getProjectByIdQuery = String.format("SELECT * FROM task WHERE project_id = '%s'", projectId);
+        String getProjectByIdQuery = String.format("SELECT * FROM project WHERE id = '%s'", projectId);
         ResultSet resultSet = statement.executeQuery(getProjectByIdQuery);
         resultSet.next();
         String id = resultSet.getString("id");
