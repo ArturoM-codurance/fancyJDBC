@@ -8,7 +8,6 @@ public class ProjectController {
     private final ProjectService projectService;
 
     public ProjectController(ProjectService projectService) {
-
         this.projectService = projectService;
     }
 
@@ -16,7 +15,7 @@ public class ProjectController {
         throw new UnsupportedOperationException();
     }
 
-    public void createProjectHandler(Request req, Response res) {
+    public String createProjectHandler(Request req, Response res) {
         throw new UnsupportedOperationException();
     }
 }
