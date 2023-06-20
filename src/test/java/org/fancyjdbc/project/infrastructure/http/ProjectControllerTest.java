@@ -11,6 +11,7 @@ import spark.Response;
 
 import java.sql.SQLException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,5 +45,27 @@ class ProjectControllerTest {
 
         // assert
         verify(projectService).createWithDefaultTask(projectId, projectName, taskId);
+    }
+
+    @Test
+    void should_return_response_with_status_201() throws SQLException {
+        String projectId = "384d6480-65f2-45ea-87e2-75ae59b15915";
+        String projectName = "Lorem ipsum project";
+        String taskId = "6549df41-a338-49fb-a980-3daa83457e9b";
+        ProjectController projectController = new ProjectController(projectService);
+        when(request.body()).thenReturn(
+                new JsonObject()
+                        .add("projectName", projectName)
+                        .add("projectId", projectId)
+                        .add("initialTaskId", taskId)
+                        .toString()
+        );
+
+        // act
+        String creatingProjectResponse = projectController.createProjectHandler(request, response);
+
+        // assert
+        verify(response).status(201);
+        assertThat(creatingProjectResponse).isNull();
     }
 }

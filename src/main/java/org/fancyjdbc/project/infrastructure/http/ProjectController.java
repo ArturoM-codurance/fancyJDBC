@@ -21,12 +21,14 @@ public class ProjectController {
 
     public String createProjectHandler(Request req, Response res) throws SQLException {
         JsonObject requestBody = Json.parse(req.body()).asObject();
+
         String projectId = requestBody.getString("projectId", null);
         String projectName = requestBody.getString("projectName", null);
         String taskId = requestBody.getString("initialTaskId", null);
 
-            projectService.createWithDefaultTask(projectId, projectName, taskId);
+        projectService.createWithDefaultTask(projectId, projectName, taskId);
 
+        res.status(201);
         return null;
     }
 }
