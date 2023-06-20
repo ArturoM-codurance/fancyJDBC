@@ -1,7 +1,6 @@
 package org.fancyjdbc.project.infrastructure.http;
 
 import com.eclipsesource.json.JsonObject;
-import jdk.jfr.Frequency;
 import org.fancyjdbc.project.application.ProjectService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,7 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import spark.Request;
 import spark.Response;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.sql.SQLException;
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,7 +25,7 @@ class ProjectControllerTest {
     Request request;
 
     @Test
-    void should_call_project_service_create_project(){
+    void should_call_project_service_create_project() throws SQLException {
         // arrange
         String projectId = "384d6480-65f2-45ea-87e2-75ae59b15915";
         String projectName = "Lorem ipsum project";
@@ -43,6 +43,6 @@ class ProjectControllerTest {
         projectController.createProjectHandler(request, response);
 
         // assert
-        verify(projectService).create(projectId, projectName, taskId);
+        verify(projectService).createWithDefaultTask(projectId, projectName, taskId);
     }
 }

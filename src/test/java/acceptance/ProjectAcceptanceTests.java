@@ -93,12 +93,12 @@ public class ProjectAcceptanceTests {
     }
 
     @Test
-    void project_is_created_with_default_task(){
+    void project_is_created_with_default_task() throws SQLException {
         // arrange
         String projectId = "95083561-bac0-4c90-9471-f8e442978f90";
         String taskId = "eb954d7b-9593-4183-b1b8-22c44a67ba80";
-        ProjectRepository projectRepository = new JDBCProjectRepository(CONNECTION_STRING);
-        TaskRepository taskRepository = new JDBCTaskRepository(CONNECTION_STRING);
+        ProjectRepository projectRepository = new JDBCProjectRepository(conn);
+        TaskRepository taskRepository = new JDBCTaskRepository(conn);
         ProjectService projectService = new ProjectService(projectRepository, taskRepository);
         ProjectController projectController = new ProjectController(projectService);
 

@@ -6,6 +6,8 @@ import org.fancyjdbc.project.application.ProjectService;
 import spark.Request;
 import spark.Response;
 
+import java.sql.SQLException;
+
 public class ProjectController {
     private final ProjectService projectService;
 
@@ -17,13 +19,13 @@ public class ProjectController {
         throw new UnsupportedOperationException();
     }
 
-    public String createProjectHandler(Request req, Response res) {
+    public String createProjectHandler(Request req, Response res) throws SQLException {
         JsonObject requestBody = Json.parse(req.body()).asObject();
         String projectId = requestBody.getString("projectId", null);
         String projectName = requestBody.getString("projectName", null);
         String taskId = requestBody.getString("initialTaskId", null);
 
-        projectService.create(projectId, projectName, taskId);
+            projectService.createWithDefaultTask(projectId, projectName, taskId);
 
         return null;
     }
