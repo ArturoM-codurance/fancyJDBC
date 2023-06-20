@@ -10,7 +10,9 @@ import org.fancyjdbc.task.application.TaskService;
 import org.fancyjdbc.task.domain.TaskRepository;
 import org.fancyjdbc.task.infrastructure.persistance.JDBCTaskRepository;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import spark.Request;
 import spark.Response;
 
@@ -21,7 +23,7 @@ import java.sql.Statement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-
+@ExtendWith(MockitoExtension.class)
 public class ProjectAcceptanceTests {
 
     public static final String CONNECTION_STRING = "jdbc:postgresql://localhost:5432/postgres?user=user&password=password";
