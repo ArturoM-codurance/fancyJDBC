@@ -22,7 +22,7 @@ public class ProjectController {
         this.taskService = taskService;
     }
 
-    public String getProjectHandler(Request req, Response res) {
+    public String getProjectHandler(Request req, Response res) throws SQLException {
 
         String projectId = req.params("projectId");
 

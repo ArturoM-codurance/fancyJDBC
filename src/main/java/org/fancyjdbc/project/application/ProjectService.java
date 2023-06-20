@@ -20,7 +20,7 @@ public class ProjectService {
         taskRepository.addTask(taskId, projectId);
     }
 
-    public Project getProject(String projectId) {
-        throw new UnsupportedOperationException();
+    public Project getProject(String projectId) throws SQLException {
+        return projectRepository.getProject(projectId);
     }
 }

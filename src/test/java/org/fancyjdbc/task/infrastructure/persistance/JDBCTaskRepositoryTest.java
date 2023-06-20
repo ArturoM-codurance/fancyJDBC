@@ -36,4 +36,13 @@ class JDBCTaskRepositoryTest {
         // assert
         verify(statement).execute(String.format("INSERT INTO task (id, project_id, name, complexity_id, cost, tax_id) VALUES ('%s', '%s', 'Initial task', 1, 0, 'spain')", taskId, projectId));
     }
+    @Test
+    void name_later(){
+        // arrange
+
+        // act
+
+        // assert
+        assertTrue(true);
+    }
 }

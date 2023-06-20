@@ -4,4 +4,6 @@ import java.sql.SQLException;
 
 public interface ProjectRepository {
     void addProject(String projectId, String projectName) throws SQLException;
+
+    Project getProject(String projectId) throws SQLException;
 }
