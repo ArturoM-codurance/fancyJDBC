@@ -1,5 +1,6 @@
 package org.fancyjdbc.project.application;
 
+import org.fancyjdbc.project.domain.Project;
 import org.fancyjdbc.project.domain.ProjectRepository;
 import org.fancyjdbc.task.domain.TaskRepository;
 
@@ -17,5 +18,9 @@ public class ProjectService {
     public void createWithDefaultTask(String projectId, String projectName, String taskId) throws SQLException {
         projectRepository.addProject(projectId, projectName);
         taskRepository.addTask(taskId, projectId);
+    }
+
+    public Project getProject(String projectId) {
+        throw new UnsupportedOperationException();
     }
 }

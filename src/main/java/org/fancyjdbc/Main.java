@@ -3,6 +3,7 @@ package org.fancyjdbc;
 import org.fancyjdbc.project.application.ProjectService;
 import org.fancyjdbc.project.infrastructure.http.ProjectController;
 import org.fancyjdbc.project.infrastructure.persistance.JDBCProjectRepository;
+import org.fancyjdbc.task.application.TaskService;
 import org.fancyjdbc.task.infrastructure.persistance.JDBCTaskRepository;
 
 import java.sql.Connection;
@@ -24,10 +25,11 @@ public class Main {
         JDBCTaskRepository taskRepository = new JDBCTaskRepository(conn);
         JDBCProjectRepository projectRepository = new JDBCProjectRepository(conn);
         ProjectService projectService = new ProjectService(projectRepository, taskRepository);
-        ProjectController projectController = new ProjectController(projectService);
+        TaskService taskService = new TaskService(taskRepository);
+        ProjectController projectController = new ProjectController(projectService, taskService);
 
         post("/project", (req, res) -> projectController.createProjectHandler(req, res));
-        get("/project/:id", (req, res) -> projectController.getProjectHandler(req, res));
+        get("/project/:projectId", (req, res) -> projectController.getProjectHandler(req, res));
     }
 
 

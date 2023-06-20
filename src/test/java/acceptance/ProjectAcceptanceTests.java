@@ -100,7 +100,8 @@ public class ProjectAcceptanceTests {
         ProjectRepository projectRepository = new JDBCProjectRepository(conn);
         TaskRepository taskRepository = new JDBCTaskRepository(conn);
         ProjectService projectService = new ProjectService(projectRepository, taskRepository);
-        ProjectController projectController = new ProjectController(projectService);
+        TaskService taskService = new TaskService(taskRepository);
+        ProjectController projectController = new ProjectController(projectService, taskService);
 
         when(req.body()).thenReturn(
                 new JsonObject()
