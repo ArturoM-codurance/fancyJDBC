@@ -1,11 +1,11 @@
 package org.fancyjdbc;
 
+import jakarta.persistence.EntityManagerFactory;
 import org.fancyjdbc.project.application.ProjectService;
 import org.fancyjdbc.project.infrastructure.http.ProjectController;
 import org.fancyjdbc.project.infrastructure.persistance.JDBCProjectRepository;
 import org.fancyjdbc.task.application.TaskService;
 import org.fancyjdbc.task.infrastructure.persistance.JDBCTaskRepository;
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -19,17 +19,21 @@ import static spark.Spark.post;
 
 public class Main {
     private static Connection conn;
-    private static SessionFactory sessionFactory;
+    private static EntityManagerFactory entityManagerFactory;
 
     public static void main(String[] args) {
-        JDBCTaskRepository taskRepository = new JDBCTaskRepository(sessionFactory);
-        JDBCProjectRepository projectRepository = new JDBCProjectRepository(sessionFactory);
+        setUp();
+
+        JDBCTaskRepository taskRepository = new JDBCTaskRepository(entityManagerFactory);
+        JDBCProjectRepository projectRepository = new JDBCProjectRepository(entityManagerFactory);
+
         ProjectService projectService = new ProjectService(projectRepository, taskRepository);
         TaskService taskService = new TaskService(taskRepository);
+
         ProjectController projectController = new ProjectController(projectService, taskService);
 
-        post("/project", (req, res) -> projectController.createProjectHandler(req, res));
-        get("/project/:projectId", (req, res) -> projectController.getProjectHandler(req, res));
+        post("/project", projectController::createProjectHandler);
+        get("/project/:projectId", projectController::getProjectHandler);
     }
 
 
@@ -38,12 +42,12 @@ public class Main {
         conn = DriverManager.getConnection(CONNECTION_STRING);
     }
 
-    protected void setUp() throws Exception {
+    protected static void setUp() {
         final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
                 .configure() // configures settings from hibernate.cfg.xml
                 .build();
         try {
-            sessionFactory = new MetadataSources( registry ).buildMetadata().buildSessionFactory();
+            entityManagerFactory = new MetadataSources( registry ).buildMetadata().buildSessionFactory();
         }
         catch (Exception e) {
             StandardServiceRegistryBuilder.destroy( registry );

@@ -26,6 +26,8 @@
         <!-- Names the annotated entity class -->
         <mapping class="org.fancyjdbc.project.domain.Project"/>
         <mapping class="org.fancyjdbc.task.domain.Task"/>
+        <mapping class="org.fancyjdbc.task.domain.TaskTax"/>
+        <mapping class="org.fancyjdbc.task.domain.TaskComplexity"/>
 
     </session-factory>
 

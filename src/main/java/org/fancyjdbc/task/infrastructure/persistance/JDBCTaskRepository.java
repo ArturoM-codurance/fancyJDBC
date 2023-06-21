@@ -1,37 +1,40 @@
 package org.fancyjdbc.task.infrastructure.persistance;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import org.fancyjdbc.task.domain.Task;
 import org.fancyjdbc.task.domain.TaskRepository;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 
 import java.util.List;
 
 public class JDBCTaskRepository implements TaskRepository {
-    private final SessionFactory sessionFactory;
+    private final EntityManagerFactory entityManagerFactory;
 
-    public JDBCTaskRepository(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
+    public JDBCTaskRepository(EntityManagerFactory entityManagerFactory) {
+        this.entityManagerFactory = entityManagerFactory;
     }
 
     @Override
     public void addTask(String taskId, String projectId) {
-        Session session = sessionFactory.openSession();
-        session.beginTransaction();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
 
-        session.persist(new Task(taskId, projectId, projectId));
+        entityManager.persist(new Task(taskId, projectId));
 
-        session.getTransaction().commit();
+        entityManager.getTransaction().commit();
     }
 
     @Override
     public List<Task> getByProjectId(String projectId){
-        Session session = sessionFactory.openSession();
-        session.beginTransaction();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
 
-        List<Task> list = session.createQuery("select t from Task t where t.projectId = '%s'".formatted(projectId), Task.class).list();
+        List<Task> list = entityManager
+                .createQuery("select t from Task t where t.projectId = :projectId", Task.class)
+                .setParameter("projectId", projectId)
+                .getResultList();
 
-        session.getTransaction().commit();
+        entityManager.getTransaction().commit();
 
         return list;
     }

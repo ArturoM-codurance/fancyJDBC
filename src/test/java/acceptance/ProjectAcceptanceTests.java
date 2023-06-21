@@ -2,13 +2,21 @@ package acceptance;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import org.fancyjdbc.project.application.ProjectService;
 import org.fancyjdbc.project.domain.ProjectRepository;
 import org.fancyjdbc.project.infrastructure.persistance.JDBCProjectRepository;
 import org.fancyjdbc.project.infrastructure.http.ProjectController;
 import org.fancyjdbc.task.application.TaskService;
+import org.fancyjdbc.task.domain.TaskComplexity;
 import org.fancyjdbc.task.domain.TaskRepository;
+import org.fancyjdbc.task.domain.TaskTax;
 import org.fancyjdbc.task.infrastructure.persistance.JDBCTaskRepository;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -59,37 +67,56 @@ public class ProjectAcceptanceTests {
                         value integer NOT NULL
                     );
             """;
+    private static EntityManagerFactory entityManagerFactory;
     @Mock
     Request req;
 
     @Mock
     Response res;
-    static private Connection conn;
 
     @BeforeAll
     static void establishConnectionAndCreateTables() throws SQLException {
-        conn = DriverManager.getConnection(CONNECTION_STRING);
+        Connection conn = DriverManager.getConnection(CONNECTION_STRING);
         Statement statement = conn.createStatement();
         statement.execute(CREATE_TABLES_QUERY);
-    }
-
-    @AfterAll
-    static void closeConnection() throws SQLException {
         conn.close();
     }
 
+    @BeforeAll
+    static void setUp() {
+        final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+                .configure() // configures settings from hibernate.cfg.xml
+                .build();
+        try {
+            entityManagerFactory = new MetadataSources( registry ).buildMetadata().buildSessionFactory();
+        }
+        catch (Exception e) {
+            StandardServiceRegistryBuilder.destroy( registry );
+        }
+    }
+
     @BeforeEach
-    void initDbConnectionAndPopulateTables() throws SQLException {
-        Statement statement = conn.createStatement();
-        statement.execute("INSERT INTO complexity (id, value) VALUES (1, 'low'), (2, 'medium'), (3, 'high')");
-        statement.execute("INSERT INTO tax (id, value) VALUES ('spain', 21), ('uk', 20), ('portugal', 15)");
+    void initDbConnectionAndPopulateTables() {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+        entityManager.persist(new TaskComplexity(1, "low"));
+        entityManager.persist(new TaskComplexity(2, "medium"));
+        entityManager.persist(new TaskComplexity(3, "high"));
+        entityManager.persist(new TaskTax("spain", 21));
+        entityManager.persist(new TaskTax("uk", 20));
+        entityManager.persist(new TaskTax("portugal", 15));
+        entityManager.getTransaction().commit();
     }
 
     @AfterEach
-    void cleanAndCloseConnection() throws SQLException {
-        Statement statement = conn.createStatement();
-        statement.execute("DELETE FROM complexity");
-        statement.execute("DELETE FROM tax");
+    void cleanAndCloseConnection() {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+        entityManager.createQuery("delete from Project where id is not null").executeUpdate();
+        entityManager.createQuery("delete from Task where id is not null").executeUpdate();
+        entityManager.createQuery("delete from TaskComplexity where id is not null").executeUpdate();
+        entityManager.createQuery("delete from TaskTax where id is not null").executeUpdate();
+        entityManager.getTransaction().commit();
     }
 
     @Test
@@ -97,8 +124,8 @@ public class ProjectAcceptanceTests {
         // arrange
         String projectId = "95083561-bac0-4c90-9471-f8e442978f90";
         String taskId = "eb954d7b-9593-4183-b1b8-22c44a67ba80";
-        ProjectRepository projectRepository = new JDBCProjectRepository(conn);
-        TaskRepository taskRepository = new JDBCTaskRepository(conn);
+        ProjectRepository projectRepository = new JDBCProjectRepository(entityManagerFactory);
+        TaskRepository taskRepository = new JDBCTaskRepository(entityManagerFactory);
         ProjectService projectService = new ProjectService(projectRepository, taskRepository);
         TaskService taskService = new TaskService(taskRepository);
         ProjectController projectController = new ProjectController(projectService, taskService);

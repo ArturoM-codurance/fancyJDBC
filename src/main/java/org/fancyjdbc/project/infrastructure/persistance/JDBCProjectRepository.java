@@ -1,37 +1,38 @@
 package org.fancyjdbc.project.infrastructure.persistance;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import org.fancyjdbc.project.domain.Project;
 import org.fancyjdbc.project.domain.ProjectRepository;
-import org.hibernate.SessionFactory;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.List;
 
 public class JDBCProjectRepository implements ProjectRepository {
-    private final Connection connection;
+    private final EntityManagerFactory entityManagerFactory;
 
-    public JDBCProjectRepository(SessionFactory sessionFactory) {
-        this.connection = sessionFactory;
+    public JDBCProjectRepository(EntityManagerFactory entityManagerFactory) {
+
+        this.entityManagerFactory = entityManagerFactory;
     }
 
     @Override
-    public void addProject(String projectId, String projectName) throws SQLException {
-        Statement statement = connection.createStatement();
-        String insertProjectQuery = String.format("INSERT INTO project (id, name) VALUES ('%s', '%s')", projectId, projectName);
-        statement.execute(insertProjectQuery);
+    public void addProject(String projectId, String projectName) {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+        entityManager.persist(new Project(projectId, projectName));
+        entityManager.getTransaction().commit();
     }
 
     @Override
-    public Project getProject(String projectId) throws SQLException {
-        Statement statement = connection.createStatement();
-        String getProjectByIdQuery = String.format("SELECT * FROM project WHERE id = '%s'", projectId);
-        ResultSet resultSet = statement.executeQuery(getProjectByIdQuery);
-        resultSet.next();
-        String id = resultSet.getString("id");
-        String projectName = resultSet.getString("name");
-        return new Project(id, projectName);
+    public Project getProject(String projectId) {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+        List<Project> resultList = entityManager
+                .createQuery("select p from Project p where id = :id", Project.class)
+                .setParameter("id", projectId)
+                .getResultList();
+        entityManager.getTransaction().commit();
+        return resultList.get(0);
 
     }
 }
