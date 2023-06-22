@@ -1,6 +1,10 @@
 package org.fancyjdbc.project.infrastructure.persistance;
 
 import org.fancyjdbc.project.domain.Project;
+import org.fancyjdbc.task.domain.Task;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -19,38 +23,40 @@ import static org.mockito.Mockito.when;
 class JDBCProjectRepositoryTest {
 
     @Mock
-    Connection connection;
+    SessionFactory sessionFactory;
     @Mock
-    Statement statement;
+    private Session session;
     @Mock
-    ResultSet resultSet;
+    private Transaction transaction
+            ;
 
     @Test
-    void should_create_project_in_database() throws SQLException {
+    void should_create_project_in_database() {
         // arrange
         String projectId = "d3aaccd2-5a12-4c2f-868d-e788dc544cec";
         String projectName = "Project name";
-        JDBCProjectRepository jdbcProjectRepository = new JDBCProjectRepository(connection);
+        JDBCProjectRepository jdbcProjectRepository = new JDBCProjectRepository(sessionFactory);
 
         // act
-        when(connection.createStatement()).thenReturn(statement);
+        when(sessionFactory.openSession()).thenReturn(session);
+        when(session.getTransaction()).thenReturn(transaction);
         jdbcProjectRepository.addProject(projectId, projectName);
 
         // assert
-        verify(statement).execute(String.format("INSERT INTO project (id, name) VALUES ('%s', '%s')", projectId, projectName));
+        verify(session).persist(new Project(projectId, projectName));
     }
     @Test
-    void should_return_project_from_database() throws SQLException {
+    void should_return_project_from_database() {
         // arrange
         String projectId = "projectId";
         String projectName = "projectName";
         Project expectedProject = new Project(projectId, projectName);
-        when(connection.createStatement()).thenReturn(statement);
-        when(statement.executeQuery("SELECT * FROM project WHERE id = 'projectId'")).thenReturn(resultSet);
-        when(resultSet.getString("id")).thenReturn(projectId);
-        when(resultSet.getString("name")).thenReturn(projectName);
+        when(sessionFactory.openSession()).thenReturn(session);
+        when(session.getTransaction()).thenReturn(transaction);
+        when(session.createQuery("select p from Project p where p.id = :id", Project.class).setParameter("id", projectId).getSingleResult()).thenReturn(expectedProject);
+
         // act
-        JDBCProjectRepository jdbcProjectRepository = new JDBCProjectRepository(connection);
+        JDBCProjectRepository jdbcProjectRepository = new JDBCProjectRepository(sessionFactory);
 
         Project actualProject = jdbcProjectRepository.getProject(projectId);
         // assert

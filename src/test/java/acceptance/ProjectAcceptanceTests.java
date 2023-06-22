@@ -9,6 +9,7 @@ import org.fancyjdbc.project.infrastructure.http.ProjectController;
 import org.fancyjdbc.task.application.TaskService;
 import org.fancyjdbc.task.domain.TaskRepository;
 import org.fancyjdbc.task.infrastructure.persistance.JDBCTaskRepository;
+import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -64,30 +65,30 @@ public class ProjectAcceptanceTests {
 
     @Mock
     Response res;
-    static private Connection conn;
+    static private SessionFactory sessionFactory;
 
     @BeforeAll
     static void establishConnectionAndCreateTables() throws SQLException {
-        conn = DriverManager.getConnection(CONNECTION_STRING);
-        Statement statement = conn.createStatement();
+        sessionFactory = DriverManager.getConnection(CONNECTION_STRING);
+        Statement statement = sessionFactory.createStatement();
         statement.execute(CREATE_TABLES_QUERY);
     }
 
     @AfterAll
     static void closeConnection() throws SQLException {
-        conn.close();
+        sessionFactory.close();
     }
 
     @BeforeEach
     void initDbConnectionAndPopulateTables() throws SQLException {
-        Statement statement = conn.createStatement();
+        Statement statement = sessionFactory.createStatement();
         statement.execute("INSERT INTO complexity (id, value) VALUES (1, 'low'), (2, 'medium'), (3, 'high')");
         statement.execute("INSERT INTO tax (id, value) VALUES ('spain', 21), ('uk', 20), ('portugal', 15)");
     }
 
     @AfterEach
     void cleanAndCloseConnection() throws SQLException {
-        Statement statement = conn.createStatement();
+        Statement statement = sessionFactory.createStatement();
         statement.execute("DELETE FROM complexity");
         statement.execute("DELETE FROM tax");
     }
@@ -97,8 +98,8 @@ public class ProjectAcceptanceTests {
         // arrange
         String projectId = "95083561-bac0-4c90-9471-f8e442978f90";
         String taskId = "eb954d7b-9593-4183-b1b8-22c44a67ba80";
-        ProjectRepository projectRepository = new JDBCProjectRepository(conn);
-        TaskRepository taskRepository = new JDBCTaskRepository(conn);
+        ProjectRepository projectRepository = new JDBCProjectRepository(sessionFactory);
+        TaskRepository taskRepository = new JDBCTaskRepository(sessionFactory);
         ProjectService projectService = new ProjectService(projectRepository, taskRepository);
         TaskService taskService = new TaskService(taskRepository);
         ProjectController projectController = new ProjectController(projectService, taskService);

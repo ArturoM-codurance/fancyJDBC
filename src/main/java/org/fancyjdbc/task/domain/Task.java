@@ -1,11 +1,37 @@
 package org.fancyjdbc.task.domain;
 
-import java.util.Objects;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
+import java.util.Objects;
+@Entity
+@Table (name = "task")
 public class Task {
 
-    private final String id;
-    private final String name;
+    @Id
+    private String id;
+    private String name;
+    @Column(name = "project_id")
+    private String projectId;
+    @Column(name = "complexity_id")
+    private int complexityId;
+    private int cost;
+    @Column(name ="tax_id")
+    private String taxId;
+
+    public Task() {
+    }
+
+    public Task(String id, String name, String projectId, int complexityId, int cost, String taxId) {
+        this.id = id;
+        this.name = name;
+        this.projectId = projectId;
+        this.complexityId = complexityId;
+        this.cost = cost;
+        this.taxId = taxId;
+    }
 
     public Task(String id, String name) {
         this.id = id;

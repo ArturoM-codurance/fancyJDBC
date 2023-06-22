@@ -2,35 +2,43 @@ package org.fancyjdbc.project.infrastructure.persistance;
 
 import org.fancyjdbc.project.domain.Project;
 import org.fancyjdbc.project.domain.ProjectRepository;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 
 public class JDBCProjectRepository implements ProjectRepository {
-    private final Connection connection;
+    private final SessionFactory sessionFactory;
 
-    public JDBCProjectRepository(Connection connection) {
-        this.connection = connection;
+    public JDBCProjectRepository(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
     @Override
-    public void addProject(String projectId, String projectName) throws SQLException {
-        Statement statement = connection.createStatement();
-        String insertProjectQuery = String.format("INSERT INTO project (id, name) VALUES ('%s', '%s')", projectId, projectName);
-        statement.execute(insertProjectQuery);
+    public void addProject(String projectId, String projectName) {
+
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        session.persist(new Project(projectId, projectName));
+        session.getTransaction().commit();
+        session.close();
     }
 
     @Override
-    public Project getProject(String projectId) throws SQLException {
-        Statement statement = connection.createStatement();
-        String getProjectByIdQuery = String.format("SELECT * FROM project WHERE id = '%s'", projectId);
-        ResultSet resultSet = statement.executeQuery(getProjectByIdQuery);
-        resultSet.next();
-        String id = resultSet.getString("id");
-        String projectName = resultSet.getString("name");
-        return new Project(id, projectName);
+    public Project getProject(String projectId) {
+
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        Project project = session.createQuery("select p from Project p where p.id = :id", Project.class).setParameter("id", projectId).getSingleResult();
+        session.getTransaction().commit();
+        session.close();
+
+        return project;
 
     }
 }

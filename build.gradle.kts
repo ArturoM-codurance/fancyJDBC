@@ -12,6 +12,7 @@ repositories {
 dependencies {
     implementation("com.eclipsesource.minimal-json:minimal-json:0.9.5")
     implementation("com.sparkjava:spark-core:2.9.4")
+    implementation("org.hibernate.orm:hibernate-core:6.2.3.Final")
     testImplementation("org.mockito:mockito-core:5.2.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.2.0")
     testImplementation("org.assertj:assertj-core:3.24.2")
