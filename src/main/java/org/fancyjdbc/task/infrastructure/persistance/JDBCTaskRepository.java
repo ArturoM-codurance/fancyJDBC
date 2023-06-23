@@ -1,25 +1,22 @@
 package org.fancyjdbc.task.infrastructure.persistance;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonObject;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import org.bson.Document;
-import org.bson.types.ObjectId;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
+import dev.morphia.query.filters.Filter;
+import dev.morphia.query.filters.Filters;
 import org.fancyjdbc.task.domain.Task;
 import org.fancyjdbc.task.domain.TaskRepository;
 
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
-import static com.mongodb.client.model.Filters.eq;
 
 public class JDBCTaskRepository implements TaskRepository {
-    private final MongoCollection<Document> collection;
+    private final Datastore datastore;
 
-    public JDBCTaskRepository(MongoCollection<Document> collection) {
-        this.collection = collection;
+    public JDBCTaskRepository(Datastore datastore) {
+        this.datastore = datastore;
     }
 
     @Override
@@ -29,29 +26,11 @@ public class JDBCTaskRepository implements TaskRepository {
         int defaultCost = 0;
         String defaultTaxCountry = "spain";
 
-        Document newTask = new Document()
-                .append("id", taskId)
-                .append("projectId", projectId)
-                .append("name", defaultName)
-                .append("complexity", defaultComplexity)
-                .append("cost", defaultCost)
-                .append("tax", defaultTaxCountry);
-        collection.insertOne(newTask);
+        datastore.insert(new Task(taskId, projectId, defaultName, defaultComplexity, defaultCost, defaultTaxCountry));
     }
 
     @Override
     public List<Task> getByProjectId(String projectId) {
-        List<Task> tasks = new ArrayList<>();
-
-        MongoCursor<Document> cursor = collection.find(eq("projectId", projectId)).iterator();
-
-        while (cursor.hasNext()){
-            JsonObject taskObject = Json.parse(cursor.next().toJson()).asObject();
-            String id = taskObject.getString("id", null);
-            String name = taskObject.getString("name", null);
-            tasks.add(new Task(id, name));
-        }
-
-        return tasks;
+        return datastore.find(Task.class).filter(Filters.eq("projectId", projectId)).stream().toList();
     }
 }

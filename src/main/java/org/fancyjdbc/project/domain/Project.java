@@ -1,8 +1,36 @@
 package org.fancyjdbc.project.domain;
 
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import org.bson.types.ObjectId;
+
 import java.util.Objects;
 
+@Entity("projects")
 public class Project {
+    @Id
+    private String _id;
+
+    private String id;
+    private String name;
+
+    public Project(String id, String name) {
+
+        this.id = id;
+        this.name = name;
+    }
+
+    public Project() {
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -16,20 +44,11 @@ public class Project {
         return Objects.hash(id, name);
     }
 
-    private final String id;
-    private final String name;
-
-    public String getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Project(String id, String name) {
-
-        this.id = id;
-        this.name = name;
+    @Override
+    public String toString() {
+        return "Project{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

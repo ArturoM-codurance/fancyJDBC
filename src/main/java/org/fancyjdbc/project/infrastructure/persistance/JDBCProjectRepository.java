@@ -1,36 +1,24 @@
 package org.fancyjdbc.project.infrastructure.persistance;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonObject;
-import com.mongodb.client.MongoCollection;
-import org.bson.Document;
+import dev.morphia.Datastore;
+import dev.morphia.query.filters.Filters;
 import org.fancyjdbc.project.domain.Project;
 import org.fancyjdbc.project.domain.ProjectRepository;
 
-import static com.mongodb.client.model.Filters.eq;
-
 public class JDBCProjectRepository implements ProjectRepository {
-    private final MongoCollection<Document> collection;
+    private final Datastore datastore;
 
-    public JDBCProjectRepository(MongoCollection<Document> collection) {
-        this.collection = collection;
+    public JDBCProjectRepository(Datastore datastore) {
+        this.datastore = datastore;
     }
 
     @Override
     public void addProject(String projectId, String projectName) {
-        Document newProject = new Document()
-                .append("id", projectId)
-                .append("name", projectName);
-
-        collection.insertOne(newProject);
+        datastore.insert(new Project(projectId, projectName));
     }
 
     @Override
     public Project getProject(String projectId) {
-        JsonObject documentJson = Json.parse(collection.find(eq("id", projectId)).first().toJson()).asObject();
-
-        String id = documentJson.getString("id", null);
-        String projectName = documentJson.getString("name", null);
-        return new Project(id, projectName);
+        return datastore.find(Project.class).filter(Filters.eq("id", projectId)).first();
     }
 }
