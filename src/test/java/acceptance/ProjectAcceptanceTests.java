@@ -2,6 +2,11 @@ package acceptance;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 import org.fancyjdbc.project.application.ProjectService;
 import org.fancyjdbc.project.domain.ProjectRepository;
 import org.fancyjdbc.project.infrastructure.persistance.JDBCProjectRepository;
@@ -23,73 +28,37 @@ import java.sql.Statement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 public class ProjectAcceptanceTests {
-
-    public static final String CONNECTION_STRING = "jdbc:postgresql://localhost:5432/postgres?user=user&password=password";
-    public static final String CREATE_TABLES_QUERY = """
-                    -- Tables -------------------------------------------------------
-                    DROP TABLE IF EXISTS task;
-                    DROP TABLE IF EXISTS project;
-                    DROP TABLE IF EXISTS complexity;
-                    DROP TABLE IF EXISTS tax;
-                    
-                    CREATE TABLE project (
-                        id text PRIMARY KEY,
-                        name text NOT NULL
-                    );
-                    
-                    CREATE TABLE task (
-                        id text PRIMARY KEY,
-                        name text NOT NULL,
-                        project_id text NOT NULL,
-                        complexity_id integer NOT NULL,
-                        cost integer NOT NULL,
-                        tax_id text NOT NULL,
-                        main_task_id text
-                    );
-                    
-                    CREATE TABLE complexity (
-                        id integer PRIMARY KEY,
-                        value text NOT NULL
-                    );
-                    
-                    CREATE TABLE tax (
-                        id text PRIMARY KEY,
-                        value integer NOT NULL
-                    );
-            """;
+    private static MongoCollection<Document> projectsCollection;
+    private static MongoCollection<Document> taskCollection;
+    private static MongoClient mongoClient;
     @Mock
     Request req;
 
     @Mock
     Response res;
-    static private Connection conn;
 
     @BeforeAll
-    static void establishConnectionAndCreateTables() throws SQLException {
-        conn = DriverManager.getConnection(CONNECTION_STRING);
-        Statement statement = conn.createStatement();
-        statement.execute(CREATE_TABLES_QUERY);
+    static void establishConnectionAndCreateTables() {
+        String uri = "mongodb://localhost:27017";
+        mongoClient = MongoClients.create(uri);
+        MongoDatabase db = mongoClient.getDatabase("test");
+        projectsCollection = db.getCollection("projects");
+        taskCollection = db.getCollection("task");
+
     }
 
     @AfterAll
-    static void closeConnection() throws SQLException {
-        conn.close();
-    }
-
-    @BeforeEach
-    void initDbConnectionAndPopulateTables() throws SQLException {
-        Statement statement = conn.createStatement();
-        statement.execute("INSERT INTO complexity (id, value) VALUES (1, 'low'), (2, 'medium'), (3, 'high')");
-        statement.execute("INSERT INTO tax (id, value) VALUES ('spain', 21), ('uk', 20), ('portugal', 15)");
+    static void closeConnection() {
+        mongoClient.close();
     }
 
     @AfterEach
-    void cleanAndCloseConnection() throws SQLException {
-        Statement statement = conn.createStatement();
-        statement.execute("DELETE FROM complexity");
-        statement.execute("DELETE FROM tax");
+    void cleanAndCloseConnection() {
+        projectsCollection.deleteMany(new Document());
+        taskCollection.deleteMany(new Document());
     }
 
     @Test
@@ -97,8 +66,8 @@ public class ProjectAcceptanceTests {
         // arrange
         String projectId = "95083561-bac0-4c90-9471-f8e442978f90";
         String taskId = "eb954d7b-9593-4183-b1b8-22c44a67ba80";
-        ProjectRepository projectRepository = new JDBCProjectRepository(conn);
-        TaskRepository taskRepository = new JDBCTaskRepository(conn);
+        ProjectRepository projectRepository = new JDBCProjectRepository(projectsCollection);
+        TaskRepository taskRepository = new JDBCTaskRepository(taskCollection);
         ProjectService projectService = new ProjectService(projectRepository, taskRepository);
         TaskService taskService = new TaskService(taskRepository);
         ProjectController projectController = new ProjectController(projectService, taskService);

@@ -1,43 +1,57 @@
 package org.fancyjdbc.task.infrastructure.persistance;
 
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonObject;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.fancyjdbc.task.domain.Task;
 import org.fancyjdbc.task.domain.TaskRepository;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class JDBCTaskRepository implements TaskRepository {
-    private final Connection connection;
+import static com.mongodb.client.model.Filters.eq;
 
-    public JDBCTaskRepository(Connection connection) {
-        this.connection = connection;
+public class JDBCTaskRepository implements TaskRepository {
+    private final MongoCollection<Document> collection;
+
+    public JDBCTaskRepository(MongoCollection<Document> collection) {
+        this.collection = collection;
     }
 
     @Override
-    public void addTask(String taskId, String projectId) throws SQLException {
-        Statement statement = connection.createStatement();
+    public void addTask(String taskId, String projectId) {
         String defaultName = "Initial task";
         int defaultComplexity = 1;
         int defaultCost = 0;
         String defaultTaxCountry = "spain";
-        String insertProjectQuery = String.format("INSERT INTO task (id, project_id, name, complexity_id, cost, tax_id) VALUES ('%s', '%s', '%s', %d, %d, '%s')", taskId, projectId, defaultName, defaultComplexity, defaultCost, defaultTaxCountry);
-        statement.execute(insertProjectQuery);
+
+        Document newTask = new Document()
+                .append("id", taskId)
+                .append("projectId", projectId)
+                .append("name", defaultName)
+                .append("complexity", defaultComplexity)
+                .append("cost", defaultCost)
+                .append("tax", defaultTaxCountry);
+        collection.insertOne(newTask);
     }
 
     @Override
-    public List<Task> getByProjectId(String projectId) throws SQLException {
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(String.format("SELECT * FROM task WHERE project_id = '%s'", projectId));
+    public List<Task> getByProjectId(String projectId) {
         List<Task> tasks = new ArrayList<>();
-        while (resultSet.next()){
-            String id = resultSet.getString("id");
-            String name = resultSet.getString("name");
+
+        MongoCursor<Document> cursor = collection.find(eq("projectId", projectId)).iterator();
+
+        while (cursor.hasNext()){
+            JsonObject taskObject = Json.parse(cursor.next().toJson()).asObject();
+            String id = taskObject.getString("id", null);
+            String name = taskObject.getString("name", null);
             tasks.add(new Task(id, name));
         }
+
         return tasks;
     }
 }
